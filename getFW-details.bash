@@ -27,6 +27,27 @@ while getopts "m:s:e:" options; do
   esac
 done
 
+cmdNames="ethercat -m 2 slaves"
+stringNames=$($cmdNames)
+regHW='0x1009 0x0'
+regFW='0x100a 0x0'
+
+echo "$cmdSlaveNames"
+while IFS= read -r line; do
+  name=${line#*+  }
+  slaveID=${line%0:*}
+  if [[ $name = "EL9*" ]]; then
+    echo "$slaveID: $name No SDOs available for this module."
+  else
+    cmdHW="ethercat -m $master upload -p $slaveID -t string $regHW"
+    ID_HW=$($cmdHW)
+    cmdFW="ethercat -m $master upload -p $slaveID -t string $regFW"
+    ID_SW=$($cmdFW)
+    echo "$slaveID: $name ID-HW: $ID_HW ID-SW: $ID_SW"
+  fi
+done <<< "$stringNames"
+
+exit 1
 outFile="$outFile"_master-$master
 echo "Firmware versions for slaves of master number [$master]" > "$outFile"
 
